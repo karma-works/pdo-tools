@@ -94,26 +94,11 @@ func (s *SVGWriter) WritePart(p *pdo.PDO, part *pdo.Part) {
 
 		var v2 *pdo.Face2DVertex
 		if line.IsConnectingFaces {
-			// Connects to another face?
+			// Connects to another face
 			v2 = get2DVertex(obj, line.Face2Index, line.Vertex2Index)
 		} else {
-			// Usually connects to next vertex in the face?
-			// Ref: `pdo_common.pas`: "line type for flaps added to unjoined lines"
-			// Wait, if it's an edge of the face?
-			// `Faces` define polygons. `Lines` define cuts or folds between them.
-			// But `Part` lines seem to be the outline.
-
-			// If `IsConnectingFaces` is false, what does it connect?
-			// Maybe it's just a flap line or something?
-			// The logic in `pdo2opf` relies on `lines_extra`.
-			// Since we don't have `lines_extra` populated (unless I reverse engineer how to populate it),
-			// I can only draw what I have.
-			// Maybe I should assume `lines` form loops?
-
-			// Let's assume for now that if `IsConnectingFaces` is true, it's a fold line?
-			// No, `ConnectsFaces` means it's an internal edge (fold).
-			// If false, it's a boundary cut?
-			continue
+			// Boundary line: connects to next vertex in the face
+			v2 = getNext2DVertex(obj, line.FaceIndex, line.VertexIndex)
 		}
 
 		if v2 == nil {

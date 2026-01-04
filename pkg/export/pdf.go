@@ -90,7 +90,7 @@ func writePartPDF(pdf *fpdf.Fpdf, p *pdo.PDO, part *pdo.Part) {
 		if line.IsConnectingFaces {
 			v2 = get2DVertex(obj, line.Face2Index, line.Vertex2Index)
 		} else {
-			continue
+			v2 = getNext2DVertex(obj, line.FaceIndex, line.VertexIndex)
 		}
 
 		if v2 == nil {
