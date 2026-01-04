@@ -1,0 +1,14 @@
+# Binaries
+pdo-tools
+
+# Artifacts
+*.svg
+*.pdf
+*.png
+*.svgz
+
+# Reference
+reference_repo/
+
+# OS
+.DS_Store
