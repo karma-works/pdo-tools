@@ -75,7 +75,6 @@ func (p *Parser) ReadHeader() error {
 	if err := p.reader.ReadBytes(&h.Version); err != nil {
 		return fmt.Errorf("read version failed: %w", err)
 	}
-	fmt.Printf("Debug: Version %d\n", h.Version)
 	if err := p.reader.ReadBytes(&h.MultiByteChars); err != nil {
 		return err
 	}

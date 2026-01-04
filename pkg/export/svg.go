@@ -87,7 +87,7 @@ func (s *SVGWriter) WritePart(p *pdo.PDO, part *pdo.Part) {
 
 		// line.FaceIndex, line.VertexIndex
 		// Find start vertex
-		v1 := s.get2DVertex(obj, line.FaceIndex, line.VertexIndex)
+		v1 := get2DVertex(obj, line.FaceIndex, line.VertexIndex)
 		if v1 == nil {
 			continue
 		}
@@ -95,7 +95,7 @@ func (s *SVGWriter) WritePart(p *pdo.PDO, part *pdo.Part) {
 		var v2 *pdo.Face2DVertex
 		if line.IsConnectingFaces {
 			// Connects to another face?
-			v2 = s.get2DVertex(obj, line.Face2Index, line.Vertex2Index)
+			v2 = get2DVertex(obj, line.Face2Index, line.Vertex2Index)
 		} else {
 			// Usually connects to next vertex in the face?
 			// Ref: `pdo_common.pas`: "line type for flaps added to unjoined lines"
@@ -133,21 +133,7 @@ func (s *SVGWriter) WritePart(p *pdo.PDO, part *pdo.Part) {
 	}
 }
 
-func (s *SVGWriter) get2DVertex(obj pdo.Object, faceIdx, vertIdx int32) *pdo.Face2DVertex {
-	if int(faceIdx) >= len(obj.Faces) {
-		return nil
-	}
-	face := obj.Faces[faceIdx]
-
-	// vertIdx is "objects vertex list" index (3D ID).
-	// We need to find which 2D vertex in the face corresponds to this 3D ID.
-	for i := range face.Vertices {
-		if face.Vertices[i].IDVertex == vertIdx {
-			return &face.Vertices[i]
-		}
-	}
-	return nil
-}
+// get2DVertex is in util.go
 
 func ExportSVG(p *pdo.PDO, w io.Writer) error {
 	// Assume A4 if page settings are 0?

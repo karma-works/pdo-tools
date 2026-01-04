@@ -14,8 +14,14 @@ A Go port of [dpethes/pdo-tools](https://github.com/dpethes/pdo-tools), a tool f
 # Build
 go build ./cmd/pdo-tools
 
-# Run
+# Export to SVG (default)
 ./pdo-tools -output output.svg input.pdo
+
+# Export to PDF
+./pdo-tools -format pdf -output output.pdf input.pdo
+
+# Dump Textures
+./pdo-tools -dump-textures input.pdo
 ```
 
 ## Credits
