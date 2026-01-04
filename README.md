@@ -6,6 +6,7 @@ A Go port of [dpethes/pdo-tools](https://github.com/dpethes/pdo-tools), a tool f
 
 - Parse PDO files (versions 3, 4, 5, 6).
 - Export to SVG (basic implementation).
+- Export to OBJ (with materials and texture extraction).
 - CLI tool for easy usage.
 
 ## Usage
@@ -15,10 +16,16 @@ A Go port of [dpethes/pdo-tools](https://github.com/dpethes/pdo-tools), a tool f
 go build ./cmd/pdo-tools
 
 # Export to SVG (default)
-./pdo-tools -output output.svg input.pdo
+./pdo-tools input.pdo
+# Output: input.svg
 
 # Export to PDF
-./pdo-tools -format pdf -output output.pdf input.pdo
+./pdo-tools -format pdf input.pdo
+# Output: input.pdf
+
+# Export to OBJ (3D Model)
+./pdo-tools -format obj input.pdo
+# Output: input.obj
 
 # Dump Textures
 ./pdo-tools -dump-textures input.pdo

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"image/png"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"pdo-tools/pkg/export"
@@ -13,7 +14,7 @@ import (
 
 func main() {
 	output := flag.String("output", "", "Output file path")
-	format := flag.String("format", "svg", "Output format (svg, pdf)")
+	format := flag.String("format", "svg", "Output format (svg, pdf, obj)")
 	dumpTextures := flag.Bool("dump-textures", false, "Dump textures to PNG files")
 	flag.Parse()
 
@@ -25,12 +26,28 @@ func main() {
 	}
 
 	inputFile := args[0]
-	if *output == "" {
-		if *format == "pdf" {
-			*output = strings.TrimSuffix(inputFile, ".pdo") + ".pdf"
-		} else {
-			*output = strings.TrimSuffix(inputFile, ".pdo") + ".svg"
+
+	// Determine format from output filename if manually specified
+	if *output != "" && *format == "svg" {
+		ext := strings.ToLower(filepath.Ext(*output))
+		switch ext {
+		case ".pdf":
+			*format = "pdf"
+		case ".obj":
+			*format = "obj"
 		}
+	}
+
+	// Determine output filename if not specified
+	if *output == "" {
+		ext := ".svg"
+		switch *format {
+		case "pdf":
+			ext = ".pdf"
+		case "obj":
+			ext = ".obj"
+		}
+		*output = strings.TrimSuffix(inputFile, filepath.Ext(inputFile)) + ext
 	}
 
 	pdoFile, err := pdo.ParseFile(inputFile)
