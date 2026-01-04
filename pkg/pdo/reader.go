@@ -3,6 +3,10 @@ package pdo
 import (
 	"encoding/binary"
 	"io"
+	"unicode/utf16"
+
+	"golang.org/x/text/encoding/japanese"
+	"golang.org/x/text/transform"
 )
 
 // Reader handles PDO specific binary reading
@@ -66,37 +70,25 @@ func (r *Reader) ReadString(shift byte) (string, error) {
 			return "", nil
 		}
 
-		// Read count-1 characters
-		buf := make([]uint16, count-1)
-		for i := 0; i < int(count-1); i++ {
-			var w uint16
-			if err := binary.Read(r.r, binary.LittleEndian, &w); err != nil {
-				return "", err
-			}
-			// Apply shift. Note: The reference code does (w - shift) & 0xFF.
-			// This suggests it's converting to "byte" string even if it was u16?
-			// But for now let's reproduce the reference logic.
-			// val := (w - uint16(shift)) & 0xFF
-			// But we return string (utf8/ansi).
-			// We'll store it as is, but if we follow reference logic, we might need to be careful.
-			// Reference: ucs += widechar((w - shift) and $ff);
-			// This implies it only keeps the lower 8 bits after shift.
-
-			buf[i] = (w - uint16(shift)) & 0xFF
-		}
-
-		// Consume the null terminator
-		var term uint16
-		if err := binary.Read(r.r, binary.LittleEndian, &term); err != nil {
+		// Read count items. Spec implies null termination.
+		// However, reading exact buffer is safer.
+		buf := make([]uint16, count)
+		if err := binary.Read(r.r, binary.LittleEndian, buf); err != nil {
 			return "", err
 		}
 
-		// Convert []uint16 (which are effectively bytes) to string
-		b := make([]byte, len(buf))
-		for i, v := range buf {
-			b[i] = byte(v)
+		// Apply shift and collect valid chars
+		runes := make([]uint16, 0, count)
+		for _, w := range buf {
+			val := w - uint16(shift)
+			if val == 0 {
+				break // Null terminator
+			}
+			runes = append(runes, val)
 		}
-		return string(b), nil
+
+		// Decode UTF-16 (Little Endian)
+		return string(utf16.Decode(runes)), nil
 
 	} else {
 		// Single byte
@@ -105,22 +97,29 @@ func (r *Reader) ReadString(shift byte) (string, error) {
 			return "", nil
 		}
 
-		buf := make([]byte, count-1)
-		for i := 0; i < int(count-1); i++ {
-			var b byte
-			if err := binary.Read(r.r, binary.LittleEndian, &b); err != nil {
-				return "", err
-			}
-			buf[i] = b - shift
-		}
-
-		// Consume null terminator
-		var term byte
-		if err := binary.Read(r.r, binary.LittleEndian, &term); err != nil {
+		buf := make([]byte, count)
+		if err := binary.Read(r.r, binary.LittleEndian, buf); err != nil {
 			return "", err
 		}
 
-		return string(buf), nil
+		// Apply shift
+		validBytes := make([]byte, 0, count)
+		for _, b := range buf {
+			val := b - shift
+			if val == 0 {
+				break
+			}
+			validBytes = append(validBytes, val)
+		}
+
+		// Decode Shift-JIS
+		decoder := japanese.ShiftJIS.NewDecoder()
+		utf8Bytes, _, err := transform.Bytes(decoder, validBytes)
+		if err != nil {
+			return string(validBytes), nil
+		}
+
+		return string(utf8Bytes), nil
 	}
 }
 

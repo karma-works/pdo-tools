@@ -37,7 +37,9 @@ func (s *SVGWriter) WriteHeader() {
 		.cut { fill:none; stroke:black; stroke-width:0.1; }
 		.mountain { fill:none; stroke:blue; stroke-width:0.1; stroke-dasharray:1,1; }
 		.valley { fill:none; stroke:red; stroke-width:0.1; stroke-dasharray:1,1; }
+		.invisible { stroke:none; display:none; }
 		.text { font-size: 5px; font-family: sans-serif; fill: black; }
+		.edge-id { font-size: 3px; font-family: sans-serif; fill: green; text-anchor: middle; dominant-baseline: middle; }
 	</style>
 `, s.width, s.height, s.width, s.height)
 }
@@ -114,14 +116,42 @@ func (s *SVGWriter) WritePart(p *pdo.PDO, part *pdo.Part) {
 		class := "cut"
 		if line.Type == 1 {
 			class = "mountain"
-		}
-		if line.Type == 2 {
+		} else if line.Type == 2 {
 			class = "valley"
+		} else if line.Type >= 3 {
+			class = "invisible"
 		}
 
 		fmt.Fprintf(s.w, `<line x1="%.3f" y1="%.3f" x2="%.3f" y2="%.3f" class="%s" />`+"\n",
 			x1, y1, x2, y2, class)
+
+		// Edge Numbers
+		// Only show on cut lines (Type 0) or generally? usually cut lines have numbers.
+		// Mountain/Valley usually don't need numbers as they are connected.
+		// Disconnected edges (cut lines) need numbers to match.
+		// The spec says "ShowEdgeID" in settings.
+		// If line.Type == 0 (Cut), we assume it's an open edge?
+		// Note: A cut line might be an outer boundary.
+		if class == "cut" && p.Settings.ShowEdgeID == 1 {
+			edgeID := findEdgeID(obj, v1.IDVertex, v2.IDVertex)
+			if edgeID > 0 {
+				// Midpoint
+				mx := (x1 + x2) / 2
+				my := (y1 + y2) / 2
+				// Offset text slightly? Or just center. Center is fine.
+				fmt.Fprintf(s.w, `<text x="%.3f" y="%.3f" class="edge-id">%d</text>`+"\n", mx, my, edgeID)
+			}
+		}
 	}
+}
+
+func findEdgeID(obj pdo.Object, v1, v2 int32) int {
+	for i, e := range obj.Edges {
+		if (e.Vertex1Index == v1 && e.Vertex2Index == v2) || (e.Vertex1Index == v2 && e.Vertex2Index == v1) {
+			return i + 1 // 1-based index
+		}
+	}
+	return 0 // Not found
 }
 
 // get2DVertex is in util.go
