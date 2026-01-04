@@ -77,6 +77,11 @@ func main() {
 			fmt.Printf("Error exporting PDF: %v\n", err)
 			os.Exit(1)
 		}
+	} else if *format == "obj" {
+		if err := export.ExportOBJ(pdoFile, f, *output); err != nil {
+			fmt.Printf("Error exporting OBJ: %v\n", err)
+			os.Exit(1)
+		}
 	} else {
 		if err := export.ExportSVG(pdoFile, f); err != nil {
 			fmt.Printf("Error exporting SVG: %v\n", err)
