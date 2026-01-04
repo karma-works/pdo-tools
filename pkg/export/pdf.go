@@ -123,10 +123,12 @@ func writePartPDF(pdf *fpdf.Fpdf, p *pdo.PDO, part *pdo.Part, offX, offY float64
 		}
 
 		// Apply Offset
-		x1 := v1.X - offX
-		y1 := v1.Y - offY
-		x2 := v2.X - offX
-		y2 := v2.Y - offY
+		// Vertex coordinates are Local. Add Part BoundingBox to get Global.
+		// Then subtract Page Offset.
+		x1 := (v1.X + part.BoundingBox.Left) - offX
+		y1 := (v1.Y + part.BoundingBox.Top) - offY
+		x2 := (v2.X + part.BoundingBox.Left) - offX
+		y2 := (v2.Y + part.BoundingBox.Top) - offY
 
 		// Set Style
 		pdf.SetLineWidth(0.1)

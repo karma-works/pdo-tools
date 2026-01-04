@@ -105,6 +105,12 @@ func (s *SVGWriter) WritePart(p *pdo.PDO, part *pdo.Part) {
 			continue
 		}
 
+		// Apply Part Offset (Vertices are local to Part)
+		x1 := v1.X + part.BoundingBox.Left
+		y1 := v1.Y + part.BoundingBox.Top
+		x2 := v2.X + part.BoundingBox.Left
+		y2 := v2.Y + part.BoundingBox.Top
+
 		class := "cut"
 		if line.Type == 1 {
 			class = "mountain"
@@ -114,7 +120,7 @@ func (s *SVGWriter) WritePart(p *pdo.PDO, part *pdo.Part) {
 		}
 
 		fmt.Fprintf(s.w, `<line x1="%.3f" y1="%.3f" x2="%.3f" y2="%.3f" class="%s" />`+"\n",
-			v1.X, v1.Y, v2.X, v2.Y, class)
+			x1, y1, x2, y2, class)
 	}
 }
 
